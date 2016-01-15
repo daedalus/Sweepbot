@@ -22,7 +22,7 @@ def putbalance(balance):
 	f.write(str(balance))
 	f.close
 
-access = ServiceProxy("http://%s:%s@127.0.0.1:8332" % (rpcuser,rpcpassword))
+access = ServiceProxy("http://{0!s}:{1!s}@127.0.0.1:8332".format(rpcuser, rpcpassword))
 
 def proccess(force):
 	access.settxfee(0)
@@ -32,7 +32,7 @@ def proccess(force):
 	if ((balance > lastbalance) or force):
 		access.sendtoaddress(savings,balance)
 		putbalance(balance)
-	print "balance: %s,lastbalance: %s " % (balance,lastbalance)
+	print "balance: {0!s},lastbalance: {1!s} ".format(balance, lastbalance)
 
 def main():
       	parser = OptionParser()
