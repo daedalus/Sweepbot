@@ -23,7 +23,7 @@ addnodes = [("127.0.0.1",8333),("respends.thinlink.com",8333),("68.168.105.168",
 txcache = {}
 pkcache = {}
 
-access = ServiceProxy("http://%s:%s@127.0.0.1:8332" % (rpcuser,rpcpassword))
+access = ServiceProxy("http://{0!s}:{1!s}@127.0.0.1:8332".format(rpcuser, rpcpassword))
 
 def make_request(*args):
     opener = urllib2.build_opener()
@@ -36,7 +36,7 @@ def make_request(*args):
         raise Exception(p)
 
 def sendblockchain(priv,address,amount,fee):
-	url =  "https://blockchain.info/merchant/%s/payment?to=%s&amount=%s&fee=%s" % (priv,address,amount,fee)
+	url =  "https://blockchain.info/merchant/{0!s}/payment?to={1!s}&amount={2!s}&fee={3!s}".format(priv, address, amount, fee)
 
 	#print url
 
