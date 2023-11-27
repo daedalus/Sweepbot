@@ -16,7 +16,7 @@ savings=''
 myaddresses = [savings,'','']
 sprivkey = ''
 
-threads = list()
+threads = []
 nodes = ""
 addnodes = [("127.0.0.1",8333),("respends.thinlink.com",8333),("68.168.105.168",8333)]
 
@@ -43,15 +43,13 @@ def sendblockchain(priv,address,amount,fee):
 	return make_request(url)
 
 def findoutputs(txraw,address):
-        tx = deserialize(txraw)
-        outputs = []
-        i = 0
-        for out in tx['outs']:
-                if address == script_to_address(out['script']):
-                        output = {'output': txhash(txraw) +  ':' + str(i), 'value': out['value']}
-                        outputs.append(output)
-                i+=1
-        return outputs
+    tx = deserialize(txraw)
+    outputs = []
+    for i, out in enumerate(tx['outs']):
+        if address == script_to_address(out['script']):
+            output = {'output': f'{txhash(txraw)}:{str(i)}', 'value': out['value']}
+            outputs.append(output)
+    return outputs
 
 def newthread(target,args):
 	t = threading.Thread(target=target,args=args)
@@ -59,23 +57,17 @@ def newthread(target,args):
         t.start()
 
 def maketx(txfrom,src,privkey,dest):
-	ins = findoutputs(txfrom,src)	
+    if ins := findoutputs(txfrom, src):
+        amount = sum(input['value'] for input in ins)
+        global fee
+        amount -= fee
 
-	if ins:
-		amount=0
-	
-		for input in ins:
-			amount += input['value']
+        outs = [{'address': dest, 'value': amount}]
 
-		global fee
-		amount -= fee
-	
-		outs = [{'address': dest, 'value': amount}]
+        tx = mktx(ins,outs)
+        tx = signall(tx,privkey)
 
-		tx = mktx(ins,outs)
-		tx = signall(tx,privkey)
-
-	return tx
+    return tx
 
 def localsend(access,tx):
 	try:
@@ -106,18 +98,15 @@ def push(tx):
 
 
 def getinfonodes(nodes):
-	tmpnodes = []
-	for node in nodes:
-                addrport = node['addr'].split(':')
-                
-                if len(addrport) == 1:
-                        port = 8333
-                else:
-                        port = int(addrport[1])
-                addr = str(addrport[0])
-                tmpnodes.append((addr,port))
+    tmpnodes = []
+    for node in nodes:
+        addrport = node['addr'].split(':')
 
-	return tmpnodes
+        port = 8333 if len(addrport) == 1 else int(addrport[1])
+        addr = str(addrport[0])
+        tmpnodes.append((addr,port))
+
+    return tmpnodes
 
 def broadcast(tx,nodes):
 	for node in nodes:
@@ -189,18 +178,18 @@ def process():
 						#newthread(target=pushtx,args=(tx,))
 
 def main():
-        parser = OptionParser()
+    parser = OptionParser()
 
-        parser.add_option("--force", dest="force",
-                help="force send")
+    parser.add_option("--force", dest="force",
+            help="force send")
 
-        (options, args) = parser.parse_args()
+    (options, args) = parser.parse_args()
 
-        force = bool(options.force)
+    force = bool(options.force)
 
-        for x in xrange(120):
-                process()
-                time.sleep(0.5)
+    for _ in xrange(120):
+        process()
+        time.sleep(0.5)
 
 if enabled:
 	main()
